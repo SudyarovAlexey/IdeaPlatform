@@ -1,4 +1,6 @@
 import java.text.ParseException;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -6,17 +8,19 @@ public class FlightDurations {
 
     private static final int PERCENTILE = 90;
     private static final double HUNDRED_PERCENTS = 100;
-    private static final double MILLISECONDS_TO_HOURS = 3_600_000;
+    private static final double MILLISECONDS_TO_MINUTES = 60_000;
+    private static final double HOUR = 60;
+    private final List<Double> durationList = new ArrayList<>();
 
     private double totalDuration;
 
-    public void getDurationListTotalDuration(Root root, List<Double> durationList) {
-        root.tickets.forEach(ticket -> {
+    public void calcDurationListTotalDuration(Tickets tickets) {
+        tickets.tickets.forEach(ticket -> {
             try {
-                double hours = (ticket.getArrivalDateAndTime().getTime()
-                        - ticket.getDepartureDateAndTime().getTime()) / MILLISECONDS_TO_HOURS;
-                durationList.add(hours);
-                totalDuration = totalDuration + hours;
+                double minutes = (ticket.getArrivalDateAndTime().getTime()
+                        - ticket.getDepartureDateAndTime().getTime()) / MILLISECONDS_TO_MINUTES;
+                durationList.add(minutes);
+                totalDuration += minutes;
             } catch (ParseException e) {
                 e.printStackTrace();
             }
@@ -24,28 +28,39 @@ public class FlightDurations {
         Collections.sort(durationList);
     }
 
-    public double getAvgDuration(List<Double> durationList) {
-        int count = durationList.size();
-        return totalDuration / count;
+    public LocalTime calcAvgDuration() {
+        double avgInt = totalDuration / durationList.size();
+        double remainder = avgInt % HOUR;
+        return getTimeFormat(avgInt, remainder);
     }
 
-    public Double getPercentileMethodA(List<Double> durationList) {
+    public LocalTime calcPercentileMethodA() {
         int index = (int) Math.round(PERCENTILE * durationList.size() / HUNDRED_PERCENTS);
-        return durationList.get(index - 1);
+        double element = durationList.get(index - 1);
+        double remainder = element % HOUR;
+        return getTimeFormat(element, remainder);
     }
 
-    public Double getPercentileMethodB(List<Double> durationList) {
+    public LocalTime calcPercentileMethodB() {
         int index = (int) Math.round((PERCENTILE * (durationList.size() - 1) / HUNDRED_PERCENTS) + 1);
-        return (durationList.get(index) - durationList.get(index - 1)) * PERCENTILE / HUNDRED_PERCENTS
+        double element = (durationList.get(index) - durationList.get(index - 1)) * PERCENTILE / HUNDRED_PERCENTS
                 + durationList.get(index - 1);
+        double remainder = element % HOUR;
+        return getTimeFormat(element, remainder);
     }
 
-    public void getResults(double avgDuration, double percentileA, double percentileB) {
-        System.out.printf("Среднее время полета между городами Владивосток и Тель-Авив: %.2f часа(ов) %n", avgDuration);
+    private LocalTime getTimeFormat(double intPart, double remainder) {
+        int hours = (int) ((intPart - remainder) / HOUR);
+        int minutes = (int) remainder;
+        return LocalTime.of(hours, minutes);
+    }
+
+    public void printResults(LocalTime avgDuration, LocalTime percentileA, LocalTime percentileB) {
+        System.out.printf("Среднее время полета между городами Владивосток и Тель-Авив: %s часа(ов) %n", avgDuration);
         System.out.printf("90-й процентиль времени полета между городами Владивосток и Тель-Авив" +
-                " по методу A: %.2f часов%n", percentileA);
+                " по методу A: %s часов%n", percentileA);
         System.out.printf("90-й процентиль времени полета между городами Владивосток и Тель-Авив" +
-                " по методу B: %.2f часов%n", percentileB);
+                " по методу B: %s часов%n", percentileB);
     }
 
 }

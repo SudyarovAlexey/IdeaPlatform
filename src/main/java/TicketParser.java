@@ -2,19 +2,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
-public class ParserTickets {
+public class TicketParser {
 
-    public Root parser() {
+    public static Tickets parse() {
 
         ObjectMapper mapper = new ObjectMapper();
-        Root root = new Root();
 
         try {
-            return mapper.readValue(ParserTickets.class.getResourceAsStream("tickets.json"), Root.class);
+            return mapper.readValue(TicketParser.class.getResourceAsStream("tickets.json"), Tickets.class);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return root;
+        return new Tickets();
     }
 
 }

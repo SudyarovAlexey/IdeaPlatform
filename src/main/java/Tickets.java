@@ -1,6 +1,6 @@
 import java.util.List;
 
-public class Root {
+public class Tickets {
 
     public List<Ticket> tickets;
 
